@@ -1,0 +1,120 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+PS C:\Users\admin> New-Item -ItemType Directory -Path "$HOME\devops-lab\logs", "$HOME\devops-lab\reports", "$HOME\devops-lab\scripts" -Force
+
+
+    Directory: C:\Users\admin\devops-lab
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----        10/13/2026   9:11 AM                logs
+d-----        10/13/2026   9:12 AM                reports
+d-----        10/13/2026   9:15 AM                scripts
+
+
+PS C:\Users\admin> Set-Location "$HOME\devops-lab"
+>> @(
+>>     "10:01:12 INFO  Server started successfully"
+>>     "10:02:45 ERROR Database connection timeout"
+>>     "10:05:10 WARN  High memory usage detected"
+>>     "10:07:33 ERROR 404 Not Found /api/users"
+>>     "10:09:01 INFO  Request processed"
+>>     "10:12:47 ERROR 404 Not Found /api/orders"
+>> ) | Set-Content .\logs\server.log
+PS C:\Users\admin\devops-lab> Get-Content .\logs\server.log
+10:01:12 INFO  Server started successfully
+10:02:45 ERROR Database connection timeout
+10:05:10 WARN  High memory usage detected
+10:07:33 ERROR 404 Not Found /api/users
+10:09:01 INFO  Request processed
+10:12:47 ERROR 404 Not Found /api/orders
+PS C:\Users\admin\devops-lab> Get-ChildItem -Path . -Filter "*.log" -Recurse -File
+
+
+    Directory: C:\Users\admin\devops-lab\logs
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----        10/13/2026  10:01 AM            248 server.log
+
+
+PS C:\Users\admin\devops-lab> Select-String -Path .\logs\server.log -Pattern "ERROR" -SimpleMatch
+
+logs\server.log:2:10:02:45 ERROR Database connection timeout
+logs\server.log:4:10:07:33 ERROR 404 Not Found /api/users
+logs\server.log:6:10:12:47 ERROR 404 Not Found /api/orders
+
+
+PS C:\Users\admin\devops-lab> Get-Content .\logs\server.log | Select-String -Pattern "404" -SimpleMatch
+
+10:07:33 ERROR 404 Not Found /api/users
+10:12:47 ERROR 404 Not Found /api/orders
+
+
+PS C:\Users\admin\devops-lab> Get-ChildItem -Path . -Filter "*.log" -Recurse -File | Select-String -Pattern "INFO" -SimpleMatch -NotMatch
+
+logs\server.log:2:10:02:45 ERROR Database connection timeout
+logs\server.log:3:10:05:10 WARN  High memory usage detected
+logs\server.log:4:10:07:33 ERROR 404 Not Found /api/users
+logs\server.log:6:10:12:47 ERROR 404 Not Found /api/orders
+
+
+PS C:\Users\admin\devops-lab> Get-Content .\logs\server.log | Select-String -Pattern "404" -SimpleMatch | ForEach-Object { $_.Line } > .\reports\daily_report.txt
+PS C:\Users\admin\devops-lab> Write-Output "10:42:47 ERROR 404 Not Found /api/products" >> .\reports\daily_report.txt
+PS C:\Users\admin\devops-lab> Write-Output "Dang loc log..."
+Dang loc log...
+PS C:\Users\admin\devops-lab> Write-Output "=== LOG REPORT ===" > .\reports\daily_report.txt
+PS C:\Users\admin\devops-lab> @'
+>> # Doc log, loc loi 404 va tao bao cao
+>> Write-Output "Dang loc log..."
+>>
+>> $projectPath = Split-Path -Parent $PSScriptRoot
+>> $logPath = Join-Path $projectPath "logs\server.log"
+>> $reportPath = Join-Path $projectPath "reports\daily_report.txt"
+>>
+>> Write-Output "=== LOG REPORT ===" > $reportPath
+>> Get-Content $logPath | Select-String -Pattern "404" -SimpleMatch | ForEach-Object { $_.Line } >> $reportPath
+>> '@ | Set-Content .\scripts\auto_report.ps1 -Encoding UTF8
+PS C:\Users\admin\devops-lab> Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+PS C:\Users\admin\devops-lab> .\scripts\auto_report.ps1
+Dang loc log...
+PS C:\Users\admin\devops-lab> Get-Content .\reports\daily_report.txt
+=== LOG REPORT ===
+10:07:33 ERROR 404 Not Found /api/users
+10:12:47 ERROR 404 Not Found /api/orders
+PS C:\Users\admin\devops-lab> Remove-Item -Path "C:\Users\admin\devops-lab\temp\*" -Recurse -Force
+Remove-Item : Cannot find path 'C:\Users\admin\devops-lab\temp' because it does not exist.
+At line:1 char:1
++ Remove-Item -Path "C:\Users\admin\devops-lab\temp\*" -Recurse -Force
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\admin\devops-lab\temp:String) [Remove-Item], ItemNotFoundExcep
+   tion
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.RemoveItemCommand
+
+PS C:\Users\admin\devops-lab> Remove-Item -Path "C:\Users\admin\devops-lab\temp\*" -Recurse -Force -WhatIf
+Remove-Item : Cannot find path 'C:\Users\admin\devops-lab\temp' because it does not exist.
+At line:1 char:1
++ Remove-Item -Path "C:\Users\admin\devops-lab\temp\*" -Recurse -Force  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\admin\devops-lab\temp:String) [Remove-Item], ItemNotFoundExcep
+   tion
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.RemoveItemCommand
+
+PS C:\Users\admin\devops-lab> New-Item -ItemType Directory -Path .\temp -Force
+
+
+    Directory: C:\Users\admin\devops-lab
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----        10/13/2026  10:06 AM                temp
+
+
+PS C:\Users\admin\devops-lab> Write-Output "Du lieu thu nghiem" > .\temp\test.txt
+PS C:\Users\admin\devops-lab> Remove-Item -Path .\temp\* -Recurse -Force -WhatIf
+What if: Performing the operation "Remove File" on target "C:\Users\admin\devops-lab\temp\test.txt".
+PS C:\Users\admin\devops-lab>
